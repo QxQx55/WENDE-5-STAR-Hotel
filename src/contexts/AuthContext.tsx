@@ -88,6 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
     if (profileError) throw profileError;
+
+    setUser(user);
+    await fetchProfile(user.id);
   };
 
   const signOut = async () => {

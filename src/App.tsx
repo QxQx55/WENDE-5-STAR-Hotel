@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Portfolio from './components/Portfolio';
@@ -15,6 +15,12 @@ function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('portfolio');
 
+  useEffect(() => {
+    if (user && profile && (currentPage === 'portfolio' || currentPage === 'login')) {
+      setCurrentPage('dashboard');
+    }
+  }, [user, profile]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
@@ -26,15 +32,10 @@ function AppContent() {
     );
   }
 
-  if (currentPage === 'portfolio') {
-    return <Portfolio onLoginClick={() => setCurrentPage('login')} />;
-  }
-
-  if (currentPage === 'login') {
-    return <Login onPortfolioClick={() => setCurrentPage('portfolio')} />;
-  }
-
   if (!user || !profile) {
+    if (currentPage === 'portfolio') {
+      return <Portfolio onLoginClick={() => setCurrentPage('login')} />;
+    }
     return <Login onPortfolioClick={() => setCurrentPage('portfolio')} />;
   }
 
