@@ -7,9 +7,10 @@ import GuestManagement from './components/GuestManagement';
 import RoomManagement from './components/RoomManagement';
 import ReservationManagement from './components/ReservationManagement';
 import BillingManagement from './components/BillingManagement';
-import { Hotel, LayoutDashboard, Users, Bed, Calendar, Receipt, LogOut } from 'lucide-react';
+import TransactionManagement from './components/TransactionManagement';
+import { Hotel, LayoutDashboard, Users, Bed, Calendar, Receipt, LogOut, Wallet } from 'lucide-react';
 
-type Page = 'portfolio' | 'login' | 'dashboard' | 'guests' | 'rooms' | 'reservations' | 'billing';
+type Page = 'portfolio' | 'login' | 'dashboard' | 'guests' | 'rooms' | 'reservations' | 'billing' | 'transactions';
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
@@ -45,6 +46,7 @@ function AppContent() {
     { id: 'rooms', label: 'Rooms', icon: Bed },
     { id: 'reservations', label: 'Reservations', icon: Calendar },
     { id: 'billing', label: 'Billing', icon: Receipt },
+    { id: 'transactions', label: 'Transactions', icon: Wallet },
   ];
 
   const renderPage = () => {
@@ -59,6 +61,8 @@ function AppContent() {
         return <ReservationManagement />;
       case 'billing':
         return <BillingManagement />;
+      case 'transactions':
+        return <TransactionManagement />;
       default:
         return <Dashboard />;
     }
