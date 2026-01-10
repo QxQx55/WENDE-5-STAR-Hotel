@@ -8,9 +8,11 @@ import RoomManagement from './components/RoomManagement';
 import ReservationManagement from './components/ReservationManagement';
 import BillingManagement from './components/BillingManagement';
 import TransactionManagement from './components/TransactionManagement';
-import { Hotel, LayoutDashboard, Users, Bed, Calendar, Receipt, LogOut, Wallet } from 'lucide-react';
+import ServiceBooking from './components/ServiceBooking';
+import ReceptionContact from './components/ReceptionContact';
+import { Hotel, LayoutDashboard, Users, Bed, Calendar, Receipt, LogOut, Wallet, Sparkles, MessageSquare } from 'lucide-react';
 
-type Page = 'portfolio' | 'login' | 'dashboard' | 'guests' | 'rooms' | 'reservations' | 'billing' | 'transactions';
+type Page = 'portfolio' | 'login' | 'dashboard' | 'guests' | 'rooms' | 'reservations' | 'billing' | 'transactions' | 'services' | 'contact';
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
@@ -45,6 +47,8 @@ function AppContent() {
     { id: 'guests', label: 'Guests', icon: Users },
     { id: 'rooms', label: 'Rooms', icon: Bed },
     { id: 'reservations', label: 'Reservations', icon: Calendar },
+    { id: 'services', label: 'Services', icon: Sparkles },
+    { id: 'contact', label: 'Reception', icon: MessageSquare },
     { id: 'billing', label: 'Billing', icon: Receipt },
     { id: 'transactions', label: 'Transactions', icon: Wallet },
   ];
@@ -59,6 +63,10 @@ function AppContent() {
         return <RoomManagement />;
       case 'reservations':
         return <ReservationManagement />;
+      case 'services':
+        return <ServiceBooking />;
+      case 'contact':
+        return <ReceptionContact />;
       case 'billing':
         return <BillingManagement />;
       case 'transactions':
