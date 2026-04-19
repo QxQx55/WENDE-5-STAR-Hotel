@@ -42,16 +42,48 @@ function AppContent() {
     return <Login onPortfolioClick={() => setCurrentPage('portfolio')} />;
   }
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'guests', label: 'Guests', icon: Users },
-    { id: 'rooms', label: 'Rooms', icon: Bed },
-    { id: 'reservations', label: 'Reservations', icon: Calendar },
-    { id: 'services', label: 'Services', icon: Sparkles },
-    { id: 'contact', label: 'Reception', icon: MessageSquare },
-    { id: 'billing', label: 'Billing', icon: Receipt },
-    { id: 'transactions', label: 'Transactions', icon: Wallet },
-  ];
+  const getMenuItems = () => {
+    const baseItems: Array<{ id: Page; label: string; icon: any }> = [];
+
+    if (profile?.role === 'customer') {
+      return [
+        { id: 'reservations', label: 'My Reservations', icon: Calendar },
+        { id: 'services', label: 'Services', icon: Sparkles },
+        { id: 'contact', label: 'Reception', icon: MessageSquare },
+        { id: 'billing', label: 'Invoices', icon: Receipt },
+      ];
+    }
+
+    if (profile?.role === 'staff') {
+      return [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'guests', label: 'Guests', icon: Users },
+        { id: 'rooms', label: 'Rooms', icon: Bed },
+        { id: 'reservations', label: 'Reservations', icon: Calendar },
+        { id: 'services', label: 'Services', icon: Sparkles },
+        { id: 'contact', label: 'Reception', icon: MessageSquare },
+        { id: 'billing', label: 'Billing', icon: Receipt },
+        { id: 'transactions', label: 'Transactions', icon: Wallet },
+      ];
+    }
+
+    if (profile?.role === 'admin') {
+      return [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'guests', label: 'Guests', icon: Users },
+        { id: 'rooms', label: 'Rooms', icon: Bed },
+        { id: 'reservations', label: 'Reservations', icon: Calendar },
+        { id: 'services', label: 'Services', icon: Sparkles },
+        { id: 'contact', label: 'Reception', icon: MessageSquare },
+        { id: 'billing', label: 'Billing', icon: Receipt },
+        { id: 'transactions', label: 'Transactions', icon: Wallet },
+      ];
+    }
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
 
   const renderPage = () => {
     switch (currentPage) {
