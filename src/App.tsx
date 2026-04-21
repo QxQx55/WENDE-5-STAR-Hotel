@@ -10,9 +10,10 @@ import BillingManagement from './components/BillingManagement';
 import TransactionManagement from './components/TransactionManagement';
 import ServiceBooking from './components/ServiceBooking';
 import ReceptionContact from './components/ReceptionContact';
-import { Hotel, LayoutDashboard, Users, Bed, Calendar, Receipt, LogOut, Wallet, Sparkles, MessageSquare } from 'lucide-react';
+import WellnessCenter from './components/WellnessCenter';
+import { Hotel, LayoutDashboard, Users, Bed, Calendar, Receipt, LogOut, Wallet, Sparkles, MessageSquare, Waves } from 'lucide-react';
 
-type Page = 'portfolio' | 'login' | 'dashboard' | 'guests' | 'rooms' | 'reservations' | 'billing' | 'transactions' | 'services' | 'contact';
+type Page = 'portfolio' | 'login' | 'dashboard' | 'guests' | 'rooms' | 'reservations' | 'billing' | 'transactions' | 'services' | 'contact' | 'wellness';
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
@@ -48,6 +49,7 @@ function AppContent() {
     if (profile?.role === 'customer') {
       return [
         { id: 'reservations', label: 'My Reservations', icon: Calendar },
+        { id: 'wellness', label: 'Wellness Center', icon: Waves },
         { id: 'services', label: 'Services', icon: Sparkles },
         { id: 'contact', label: 'Reception', icon: MessageSquare },
         { id: 'billing', label: 'Invoices', icon: Receipt },
@@ -60,6 +62,7 @@ function AppContent() {
         { id: 'guests', label: 'Guests', icon: Users },
         { id: 'rooms', label: 'Rooms', icon: Bed },
         { id: 'reservations', label: 'Reservations', icon: Calendar },
+        { id: 'wellness', label: 'Wellness Center', icon: Waves },
         { id: 'services', label: 'Services', icon: Sparkles },
         { id: 'contact', label: 'Reception', icon: MessageSquare },
         { id: 'billing', label: 'Billing', icon: Receipt },
@@ -73,6 +76,7 @@ function AppContent() {
         { id: 'guests', label: 'Guests', icon: Users },
         { id: 'rooms', label: 'Rooms', icon: Bed },
         { id: 'reservations', label: 'Reservations', icon: Calendar },
+        { id: 'wellness', label: 'Wellness Center', icon: Waves },
         { id: 'services', label: 'Services', icon: Sparkles },
         { id: 'contact', label: 'Reception', icon: MessageSquare },
         { id: 'billing', label: 'Billing', icon: Receipt },
@@ -95,6 +99,8 @@ function AppContent() {
         return <RoomManagement />;
       case 'reservations':
         return <ReservationManagement />;
+      case 'wellness':
+        return <WellnessCenter />;
       case 'services':
         return <ServiceBooking />;
       case 'contact':
