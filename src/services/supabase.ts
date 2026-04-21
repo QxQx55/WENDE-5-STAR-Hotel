@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Room, Booking, User, Guest, Invoice, Payment, Task, Review } from '../types';
+import type { Room, Booking, User, Guest, Invoice, Payment, Task, Review, HotelRoom, HotelBooking } from '../types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -379,6 +379,138 @@ export const reviewService = {
 
   async createReview(review: Omit<Review, 'id' | 'created_at' | 'updated_at'>): Promise<Review> {
     const { data, error } = await supabase.from('reviews').insert([review]).select().single();
+
+    if (error) throw error;
+    return data;
+  },
+};
+
+// Hotel Room Service (Simplified booking system)
+export const hotelRoomService = {
+  async getRooms(): Promise<HotelRoom[]> {
+    const { data, error } = await supabase
+      .from('hotel_rooms')
+      .select('*')
+      .eq('is_available', true)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getRoomById(id: string): Promise<HotelRoom | null> {
+    const { data, error } = await supabase.from('hotel_rooms').select('*').eq('id', id).maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async adminCreateRoom(room: Omit<HotelRoom, 'id' | 'created_at'>): Promise<HotelRoom> {
+    const { data, error } = await supabase.from('hotel_rooms').insert([room]).select().single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async adminUpdateRoom(id: string, updates: Partial<HotelRoom>): Promise<HotelRoom> {
+    const { data, error } = await supabase
+      .from('hotel_rooms')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async adminDeleteRoom(id: string): Promise<void> {
+    const { error } = await supabase.from('hotel_rooms').delete().eq('id', id);
+
+    if (error) throw error;
+  },
+};
+
+// Hotel Booking Service (Simplified booking system)
+export const hotelBookingService = {
+  async getBookings(): Promise<HotelBooking[]> {
+    const { data, error } = await supabase
+      .from('hotel_bookings')
+      .select('*, room:hotel_rooms(*)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getUserBookings(userId: string): Promise<HotelBooking[]> {
+    const { data, error } = await supabase
+      .from('hotel_bookings')
+      .select('*, room:hotel_rooms(*)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getBookingById(id: string): Promise<HotelBooking | null> {
+    const { data, error } = await supabase
+      .from('hotel_bookings')
+      .select('*, room:hotel_rooms(*)')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createBooking(booking: Omit<HotelBooking, 'id' | 'created_at'>): Promise<HotelBooking> {
+    const { data, error } = await supabase
+      .from('hotel_bookings')
+      .insert([booking])
+      .select('*, room:hotel_rooms(*)')
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async cancelBooking(id: string): Promise<void> {
+    const { error } = await supabase.from('hotel_bookings').update({ status: 'cancelled' }).eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async updateBookingStatus(id: string, status: HotelBooking['status']): Promise<HotelBooking> {
+    const { data, error } = await supabase
+      .from('hotel_bookings')
+      .update({ status })
+      .eq('id', id)
+      .select('*, room:hotel_rooms(*)')
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async checkAvailability(roomId: string, checkIn: string, checkOut: string): Promise<boolean> {
+    const { data, error } = await supabase.rpc('is_room_available', {
+      p_room_id: roomId,
+      p_check_in: checkIn,
+      p_check_out: checkOut,
+    });
+
+    if (error) throw error;
+    return data === true;
+  },
+
+  async calculateTotalPrice(roomId: string, checkIn: string, checkOut: string): Promise<number> {
+    const { data, error } = await supabase.rpc('calculate_booking_total', {
+      p_room_id: roomId,
+      p_check_in: checkIn,
+      p_check_out: checkOut,
+    });
 
     if (error) throw error;
     return data;

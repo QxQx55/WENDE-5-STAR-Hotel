@@ -123,6 +123,32 @@ export interface Review {
   updated_at: string;
 }
 
+// Hotel Room Types (Simplified for booking system)
+export interface HotelRoom {
+  id: string;
+  name: string;
+  description?: string;
+  price_per_night: number;
+  images: string[];
+  is_available: boolean;
+  created_at: string;
+}
+
+// Hotel Booking Types (Simplified for booking system)
+export type HotelBookingStatus = 'pending' | 'confirmed' | 'cancelled';
+
+export interface HotelBooking {
+  id: string;
+  user_id: string;
+  room_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_price: number;
+  status: HotelBookingStatus;
+  created_at: string;
+  room?: HotelRoom;
+}
+
 // Pagination Types
 export interface PaginationParams {
   page: number;
