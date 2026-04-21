@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase, Profile } from '../lib/supabase';
+import { User as AuthUser } from '@supabase/supabase-js';
+import { authService, userService } from '../services/supabase';
+import type { User } from '../types';
 
 type AuthContextType = {
-  user: User | null;
-  profile: Profile | null;
+  user: AuthUser | null;
+  profile: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, role?: 'customer' | 'staff' | 'admin') => Promise<void>;
@@ -14,12 +15,12 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authService.getSession().then((session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = authService.onAuthStateChange((_event, session) => {
       (async () => {
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -45,13 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) throw error;
+      const data = await userService.getProfile(userId);
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -61,41 +56,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    if (!user) throw new Error('Failed to sign in');
-    await fetchProfile(user.id);
+    const { user: authUser } = await authService.signIn(email, password);
+    if (!authUser) throw new Error('Failed to sign in');
+    setUser(authUser);
+    await fetchProfile(authUser.id);
   };
 
   const signUp = async (email: string, password: string, fullName: string, role: 'customer' | 'staff' | 'admin' = 'customer') => {
-    const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const { user: authUser } = await authService.signUp(email, password, fullName, role);
+    if (!authUser) throw new Error('Failed to create account');
 
-    if (signUpError) throw signUpError;
-    if (!user) throw new Error('Failed to create account');
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: user.id,
-          email: email,
-          full_name: fullName,
-          role: role,
-        },
-      ]);
+    const existingProfile = await userService.getProfile(authUser.id);
+    if (!existingProfile) {
+      await userService.updateProfile(authUser.id, {
+        id: authUser.id,
+        email,
+        full_name: fullName,
+        role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as User);
+    }
 
-    if (profileError) throw profileError;
-
-    setUser(user);
-    await fetchProfile(user.id);
+    setUser(authUser);
+    await fetchProfile(authUser.id);
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    await authService.signOut();
+    setUser(null);
+    setProfile(null);
   };
 
   return (
