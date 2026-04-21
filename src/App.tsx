@@ -3,6 +3,9 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Portfolio from './components/Portfolio';
 import Dashboard from './components/Dashboard';
+import AdminDashboard from './components/AdminDashboard';
+import StaffDashboard from './components/StaffDashboard';
+import CustomerDashboard from './components/CustomerDashboard';
 import GuestManagement from './components/GuestManagement';
 import RoomManagement from './components/RoomManagement';
 import ReservationManagement from './components/ReservationManagement';
@@ -92,6 +95,13 @@ function AppContent() {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
+        if (profile?.role === 'admin') {
+          return <AdminDashboard />;
+        } else if (profile?.role === 'staff') {
+          return <StaffDashboard />;
+        } else if (profile?.role === 'customer') {
+          return <CustomerDashboard />;
+        }
         return <Dashboard />;
       case 'guests':
         return <GuestManagement />;
@@ -110,6 +120,13 @@ function AppContent() {
       case 'transactions':
         return <TransactionManagement />;
       default:
+        if (profile?.role === 'admin') {
+          return <AdminDashboard />;
+        } else if (profile?.role === 'staff') {
+          return <StaffDashboard />;
+        } else if (profile?.role === 'customer') {
+          return <CustomerDashboard />;
+        }
         return <Dashboard />;
     }
   };

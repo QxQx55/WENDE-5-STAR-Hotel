@@ -71,23 +71,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { user }, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: role,
+        },
+      },
     });
 
     if (signUpError) throw signUpError;
     if (!user) throw new Error('Failed to create account');
 
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: user.id,
-          email: email,
-          full_name: fullName,
-          role: role,
-        },
-      ]);
+    // Wait a moment for the trigger to create the profile
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    if (profileError) throw profileError;
+    // Verify or create profile
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: user.id,
+            email: email,
+            full_name: fullName,
+            role: role,
+          },
+        ]);
+
+      if (profileError) throw profileError;
+    }
 
     setUser(user);
     await fetchProfile(user.id);
