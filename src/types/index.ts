@@ -1,5 +1,5 @@
 // User and Authentication Types
-export type UserRole = 'admin' | 'staff' | 'customer';
+export type UserRole = 'admin' | 'staff' | 'customer' | 'manager' | 'front_desk' | 'housekeeping' | 'finance';
 
 export interface User {
   id: string;
@@ -41,6 +41,7 @@ export interface Room {
   amenities?: string[];
   floor: number;
   description?: string;
+  image_url?: string | null;
   created_at: string;
   updated_at: string;
 }

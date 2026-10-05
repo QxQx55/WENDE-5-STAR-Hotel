@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import {
   Wrench, AlertTriangle, Clock, CheckCircle, Plus, X, Search, RefreshCw,
-  Filter, Edit2, Trash2, Eye, Calendar, User, MapPin, DollarSign
+  Filter, Edit2, Trash2, Eye, Calendar, User, MapPin
 } from 'lucide-react';
 import type { PmsMaintenanceRequest, PmsMaintenanceAsset, PmsRoom } from '../../types/pms';
 
@@ -47,7 +47,7 @@ export default function MaintenanceDashboard() {
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewRequestModal, setShowNewRequestModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<PmsMaintenanceRequest | null>(null);
+  const [, setSelectedRequest] = useState<PmsMaintenanceRequest | null>(null);
   const [view, setView] = useState<'requests' | 'assets'>('requests');
   const [newRequest, setNewRequest] = useState({
     room_id: '',
@@ -121,7 +121,7 @@ export default function MaintenanceDashboard() {
         location: newRequest.location,
         estimated_cost: newRequest.estimated_cost ? parseFloat(newRequest.estimated_cost) : null,
         status: 'pending',
-        reported_by: profile?.id,
+        reported_by: profile?.id ?? null,
       });
       setShowNewRequestModal(false);
       setNewRequest({ room_id: '', title: '', description: '', priority: 'normal', location: '', estimated_cost: '' });

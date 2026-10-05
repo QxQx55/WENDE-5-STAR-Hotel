@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   LayoutDashboard, Bed, Users, Calendar, Sparkles, Receipt, CreditCard,
-  ClipboardList, BarChart3, Shield, ChevronRight, Loader, CheckCircle2,
-  Clock, XCircle, UserCheck, LogOut, ArrowRight, Plus, Eye, X, RefreshCw,
-  AlertTriangle, Search, DollarSign, Settings, Package, Save, Trash2, Edit2,
-  Wrench, Key, Award, Gift, LayoutGrid, Clock3, TrendingUp, Box, UsersRound,
+  BarChart3, Shield, ChevronRight, Loader, CheckCircle2,
+  Clock, XCircle, UserCheck, LogOut, Plus, Eye, X, RefreshCw,
+  AlertTriangle, Search, Settings, Package, Save, Trash2, Edit2,
+  Wrench, Key, Award, LayoutGrid, Clock3, TrendingUp, Box, UsersRound,
   Radio, ShoppingCart
 } from 'lucide-react';
 import type { PmsGuest, PmsRoom, PmsRoomType, PmsReservation, PmsFolio, PmsPayment, PmsService, PmsHousekeepingTask, PmsDashboardStats, RoomStatus, HousekeepingTaskStatus, PaymentMethod } from '../types/pms';

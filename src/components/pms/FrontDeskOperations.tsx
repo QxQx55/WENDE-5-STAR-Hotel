@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import {
-  UserCheck, LogOut, Key, CreditCard, Clock, Search, RefreshCw, Plus, X, Eye,
-  Phone, Mail, IdCard, Calendar, Bed, Users, AlertTriangle, CheckCircle,
-  ChevronRight, FileText, Send, MessageSquare
+  UserCheck, LogOut, Key, Search, RefreshCw, Plus, X,
+  Phone, Mail, Calendar, Bed, Users,
+  FileText, MessageSquare
 } from 'lucide-react';
-import type { PmsGuest, PmsRoom, PmsReservation, PmsRoomType, PmsFolio } from '../../types/pms';
+import type { PmsGuest, PmsRoom, PmsReservation } from '../../types/pms';
 
 type ViewMode = 'arrivals' | 'departures' | 'in_house' | 'all';
 
@@ -19,16 +19,16 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function FrontDeskOperations() {
-  const { profile } = useAuth();
+  useAuth();
   const [reservations, setReservations] = useState<PmsReservation[]>([]);
   const [rooms, setRooms] = useState<PmsRoom[]>([]);
-  const [guests, setGuests] = useState<PmsGuest[]>([]);
+  const [_guests, setGuests] = useState<PmsGuest[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('arrivals');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReservation, setSelectedReservation] = useState<PmsReservation | null>(null);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
-  const [showNewReservationModal, setShowNewReservationModal] = useState(false);
+  const [, setShowNewReservationModal] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 

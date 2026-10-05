@@ -3,9 +3,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import {
   Bed, Brush, AlertTriangle, Clock, CheckCircle, User, RefreshCw, Plus, X,
-  Sparkles, Timer, ChevronRight, Filter, Search, Edit2, Trash2, Eye
+  Sparkles, Timer, Search
 } from 'lucide-react';
-import type { PmsRoom, PmsHousekeepingTask, PmsGuest, PmsReservation } from '../../types/pms';
+import type { PmsRoom, PmsHousekeepingTask } from '../../types/pms';
 
 type TaskFilter = 'all' | 'pending' | 'in_progress' | 'completed';
 type RoomFilter = 'all' | 'AVAILABLE' | 'OCCUPIED' | 'DIRTY' | 'CLEANING' | 'MAINTENANCE';
@@ -35,7 +35,7 @@ const PRIORITY_CONFIG: Record<string, { bg: string; text: string }> = {
 };
 
 export default function HousekeepingDashboard() {
-  const { profile } = useAuth();
+  useAuth();
   const [rooms, setRooms] = useState<PmsRoom[]>([]);
   const [tasks, setTasks] = useState<PmsHousekeepingTask[]>([]);
   const [loading, setLoading] = useState(true);

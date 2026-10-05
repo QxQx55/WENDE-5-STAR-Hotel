@@ -1,41 +1,61 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Hotel, Loader, ArrowRight, Check, Shield, Users, Bed, DollarSign, Settings, Sparkles } from 'lucide-react';
+import { Hotel, Loader, ArrowRight, Check, Sparkles, Users, Bed, DollarSign, Settings } from 'lucide-react';
+
+type RoleKey = 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer';
 
 export function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer'>('customer');
+  const [role, setRole] = useState<RoleKey>('customer');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (password !== confirmPassword) { setError('Passwords do not match'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
-    setLoading(true);
-    try {
-      await signUp(email, password, fullName, role);
-      navigate('/');
-    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to create account'); }
-    finally { setLoading(false); }
-  };
-
-  const roleInfo: Record<string, { icon: React.ElementType; label: string; desc: string }> = {
+  const roleInfo: Record<RoleKey, { icon: typeof Users; label: string; desc: string }> = {
     admin: { icon: Settings, label: 'Administrator', desc: 'Full system access, manage everything' },
     manager: { icon: Users, label: 'Manager', desc: 'Manage operations, view all reports' },
     front_desk: { icon: Bed, label: 'Front Desk', desc: 'Check-in/out, reservations, guests' },
     housekeeping: { icon: Sparkles, label: 'Housekeeping', desc: 'Room status, cleaning tasks' },
     finance: { icon: DollarSign, label: 'Finance', desc: 'Billing, payments, reports' },
     customer: { icon: Users, label: 'Guest', desc: 'Book rooms, view reservations' },
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const success = await signUp(email, password, fullName, role);
+      if (success) {
+        navigate('/');
+      } else {
+        setNotice('Account created. Check your email to confirm your account, then sign in.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create account');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,9 +75,7 @@ export function SignupPage() {
             <span className="text-2xl font-bold">ወንዴ Grand Hotel and Spa</span>
           </div>
           <h1 className="text-4xl font-bold mb-4">{t('signup_joinTeam')}</h1>
-          <p className="text-lg text-white/80 max-w-md mb-8">
-            {t('signup_desc')}
-          </p>
+          <p className="text-lg text-white/80 max-w-md mb-8">{t('signup_desc')}</p>
           <div className="space-y-4">
             {['Manage reservations and guests', 'Track housekeeping in real-time', 'Process payments securely', 'Access audit logs and reports'].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -88,44 +106,43 @@ export function SignupPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('signup_fullName')}</label>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="John Doe" />
+                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="John Doe" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('signup_emailLabel')}</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="your@email.com" />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="your@email.com" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('signup_passwordLabel')}</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="Min 6 characters" />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="Min 6 characters" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('signup_confirm')}</label>
-                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="Confirm password" />
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm" placeholder="Confirm password" />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-3">{t('signup_accountType')}</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {(Object.keys(roleInfo) as Array<keyof typeof roleInfo>).map(r => {
+                {(Object.keys(roleInfo) as RoleKey[]).map((r) => {
                   const info = roleInfo[r];
                   const isSelected = role === r;
+                  const Icon = info.icon;
                   return (
                     <button
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
                       className={`p-3 rounded-xl border-2 transition-all text-left ${
-                        isSelected
-                          ? 'border-slate-900 bg-slate-50'
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        isSelected ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <info.icon className={`w-4 h-4 ${isSelected ? 'text-slate-900' : 'text-slate-500'}`} />
+                        <Icon className={`w-4 h-4 ${isSelected ? 'text-slate-900' : 'text-slate-500'}`} />
                         <span className={`text-sm font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>{info.label}</span>
                       </div>
                     </button>
@@ -136,6 +153,7 @@ export function SignupPage() {
             </div>
 
             {error && <div className="bg-red-50 text-red-700 p-3 rounded-xl text-sm">{error}</div>}
+            {notice && <div className="bg-green-50 text-green-800 p-3 rounded-xl text-sm">{notice}</div>}
 
             <button
               type="submit"

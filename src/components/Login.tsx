@@ -8,14 +8,15 @@ export default function Login({ onPortfolioClick }: { onPortfolioClick?: () => v
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'customer' | 'staff' | 'admin'>('customer');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNotice('');
     setLoading(true);
 
     try {
@@ -35,13 +36,12 @@ export default function Login({ onPortfolioClick }: { onPortfolioClick?: () => v
           setLoading(false);
           return;
         }
-        await signUp(email, password, fullName, role);
-        setError('');
+        const signedIn = await signUp(email, password, fullName);
+        setNotice(signedIn ? '' : 'Account created. Check your email to confirm your account, then sign in.');
         setEmail('');
         setPassword('');
         setConfirmPassword('');
         setFullName('');
-        setRole('customer');
         setIsSignUp(false);
       } else {
         await signIn(email, password);
@@ -96,26 +96,6 @@ export default function Login({ onPortfolioClick }: { onPortfolioClick?: () => v
                 />
               </div>
 
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-slate-700 mb-2">
-                  Account Type
-                </label>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as 'customer' | 'staff' | 'admin')}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition"
-                >
-                  <option value="customer">Customer</option>
-                  <option value="staff">Staff Member</option>
-                  <option value="admin">Administrator</option>
-                </select>
-                <p className="text-xs text-slate-500 mt-1">
-                  {role === 'customer' && 'Book rooms and manage reservations'}
-                  {role === 'staff' && 'Access hotel management tools'}
-                  {role === 'admin' && 'Full system administration access'}
-                </p>
-              </div>
             </>
           )}
 
@@ -171,6 +151,11 @@ export default function Login({ onPortfolioClick }: { onPortfolioClick?: () => v
               {error}
             </div>
           )}
+          {notice && (
+            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
+              {notice}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -193,7 +178,7 @@ export default function Login({ onPortfolioClick }: { onPortfolioClick?: () => v
                 setPassword('');
                 setFullName('');
                 setConfirmPassword('');
-                setRole('customer');
+                setNotice('');
               }}
               className="text-slate-900 font-semibold hover:underline ml-1"
             >

@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import {
-  LayoutDashboard, Bed, Users, Calendar, DollarSign, TrendingUp, TrendingDown,
-  CheckCircle, Clock, XCircle, AlertTriangle, ArrowRight, Sparkles, Receipt,
-  CreditCard, Activity, RefreshCw, Eye, ChevronRight, BarChart3, PieChart,
-  Zap, UserCheck, LogOut, ShoppingBag, Car, UtensilsCrossed, Wine, Dumbbell,
-  Flower2, Bell, Settings, FileText, Download, Filter
+  Bed, Users, Calendar, DollarSign, TrendingUp, TrendingDown,
+  CheckCircle, AlertTriangle, Sparkles, Receipt,
+  Activity, RefreshCw, ChevronRight, UserCheck, LogOut,
+  Bell, Settings, Download
 } from 'lucide-react';
-import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface DashboardStats {
   totalRooms: number;
@@ -72,7 +70,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalRooms: 0,
     availableRooms: 0,
@@ -115,50 +113,50 @@ export default function AdminDashboard() {
       ]);
 
       // Room stats
-      const rooms = roomsRes.data || [];
+      const rooms = (roomsRes.data ?? []) as Array<{ id: string; status: string }>;
       const totalRooms = rooms.length;
-      const availableRooms = rooms.filter(r => r.status === 'AVAILABLE').length;
-      const occupiedRooms = rooms.filter(r => r.status === 'OCCUPIED').length;
-      const dirtyRooms = rooms.filter(r => r.status === 'DIRTY').length;
+      const availableRooms = rooms.filter((room: { status: string }) => room.status === 'AVAILABLE').length;
+      const occupiedRooms = rooms.filter((room: { status: string }) => room.status === 'OCCUPIED').length;
+      const dirtyRooms = rooms.filter((room: { status: string }) => room.status === 'DIRTY').length;
       const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
 
       // Guest stats
       const totalGuests = guestsRes.count || 0;
 
       // Reservation stats
-      const reservations = reservationsRes.data || [];
-      const activeReservations = reservations.filter(r =>
-        ['PENDING', 'CONFIRMED', 'CHECKED_IN'].includes(r.status)
+      const reservations = (reservationsRes.data ?? []) as Array<{ status: string; check_in_date: string; check_out_date: string }>;
+      const activeReservations = reservations.filter((reservation: { status: string }) =>
+        ['PENDING', 'CONFIRMED', 'CHECKED_IN'].includes(reservation.status)
       ).length;
-      const checkInsToday = reservations.filter(r =>
-        r.check_in_date === today && ['CONFIRMED', 'PENDING'].includes(r.status)
+      const checkInsToday = reservations.filter((reservation: { check_in_date: string; status: string }) =>
+        reservation.check_in_date === today && ['CONFIRMED', 'PENDING'].includes(reservation.status)
       ).length;
-      const checkOutsToday = reservations.filter(r =>
-        r.check_out_date === today && r.status === 'CHECKED_IN'
+      const checkOutsToday = reservations.filter((reservation: { check_out_date: string; status: string }) =>
+        reservation.check_out_date === today && reservation.status === 'CHECKED_IN'
       ).length;
 
       // Payment stats
-      const payments = paymentsRes.data || [];
-      const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const pendingPayments = payments.filter(p => p.amount > 0).reduce((sum, p) => sum + (p.amount || 0), 0);
+      const payments = (paymentsRes.data ?? []) as Array<{ amount: number; created_at?: string }>;
+      const totalRevenue = payments.reduce((sum: number, payment: { amount: number }) => sum + (payment.amount || 0), 0);
+      const pendingPayments = payments.filter((payment: { amount: number }) => payment.amount > 0).reduce((sum: number, payment: { amount: number }) => sum + (payment.amount || 0), 0);
 
       // Service booking stats
-      const serviceBookings = serviceBookingsRes.data || [];
-      const activeServiceBookings = serviceBookings.filter(b =>
-        ['reserved', 'confirmed', 'in_progress'].includes(b.status)
+      const serviceBookings = (serviceBookingsRes.data ?? []) as Array<{ status: string; total_amount?: number; service_id?: string }>;
+      const activeServiceBookings = serviceBookings.filter((booking: { status: string }) =>
+        ['reserved', 'confirmed', 'in_progress'].includes(booking.status)
       ).length;
 
       // Service category stats
-      const services = servicesRes.data || [];
+      const services = (servicesRes.data ?? []) as Array<{ id: string; category: string }>;
       const categoryMap: Record<string, { count: number; revenue: number }> = {};
-      serviceBookings.forEach(b => {
-        const service = services.find(s => s.id === (b as any).service_id);
+      serviceBookings.forEach((booking: { service_id?: string; total_amount?: number }) => {
+        const service = services.find((item: { id: string }) => item.id === booking.service_id);
         if (service) {
           if (!categoryMap[service.category]) {
             categoryMap[service.category] = { count: 0, revenue: 0 };
           }
           categoryMap[service.category].count++;
-          categoryMap[service.category].revenue += (b as any).total_amount || 0;
+          categoryMap[service.category].revenue += booking.total_amount || 0;
         }
       });
 
@@ -177,10 +175,10 @@ export default function AdminDashboard() {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
-        const dayPayments = payments.filter(p => p.created_at?.startsWith(dateStr));
+        const dayPayments = payments.filter((payment: { created_at?: string }) => payment.created_at?.startsWith(dateStr));
         last7Days.push({
           date: dateStr,
-          revenue: dayPayments.reduce((sum, p) => sum + (p.amount || 0), 0),
+          revenue: dayPayments.reduce((sum: number, payment: { amount: number }) => sum + (payment.amount || 0), 0),
           bookings: 0,
         });
       }

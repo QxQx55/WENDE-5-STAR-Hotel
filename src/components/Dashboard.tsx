@@ -46,28 +46,28 @@ export default function Dashboard() {
 
       const totalGuests = guestsRes.count || 0;
       const totalRooms = roomsRes.count || 0;
-      const availableRooms = roomsRes.data?.filter((r) => r.status === 'Available').length || 0;
-      const occupiedRooms = roomsRes.data?.filter((r) => r.status === 'Occupied').length || 0;
+      const availableRooms = roomsRes.data?.filter((room: { status: string }) => room.status === 'Available').length || 0;
+      const occupiedRooms = roomsRes.data?.filter((room: { status: string }) => room.status === 'Occupied').length || 0;
 
       const reservations = reservationsRes.data || [];
-      const activeReservations = reservations.filter((r) =>
-        ['Pending', 'Confirmed', 'Checked-In'].includes(r.status)
+      const activeReservations = reservations.filter((reservation: { status: string }) =>
+        ['Pending', 'Confirmed', 'Checked-In'].includes(reservation.status)
       ).length;
 
       const checkInsToday = reservations.filter(
-        (r) => r.check_in_date === today && r.status === 'Confirmed'
+        (reservation: { check_in_date: string; status: string }) => reservation.check_in_date === today && reservation.status === 'Confirmed'
       ).length;
 
       const checkOutsToday = reservations.filter(
-        (r) => r.check_out_date === today && r.status === 'Checked-In'
+        (reservation: { check_out_date: string; status: string }) => reservation.check_out_date === today && reservation.status === 'Checked-In'
       ).length;
 
       const invoices = invoicesRes.data || [];
-      const totalRevenue = (paymentsRes.data || []).reduce((sum, p) => sum + p.amount, 0);
+      const totalRevenue = (paymentsRes.data || []).reduce((sum: number, payment: { amount: number }) => sum + payment.amount, 0);
 
       const pendingPayments = invoices
-        .filter((inv) => inv.payment_status !== 'Paid')
-        .reduce((sum, inv) => sum + inv.total_amount, 0);
+        .filter((invoice: { payment_status: string }) => invoice.payment_status !== 'Paid')
+        .reduce((sum: number, invoice: { total_amount: number }) => sum + invoice.total_amount, 0);
 
       setStats({
         totalGuests,

@@ -18,7 +18,10 @@ export const useRooms = () => {
       setRooms(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch rooms'));
+      const message = typeof err === 'object' && err !== null && 'message' in err
+        ? String(err.message)
+        : 'Failed to fetch rooms';
+      setError(err instanceof Error ? err : new Error(message));
     } finally {
       setLoading(false);
     }
@@ -45,7 +48,10 @@ export const useAvailableRooms = (checkIn: string, checkOut: string) => {
       setRooms(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch available rooms'));
+      const message = typeof err === 'object' && err !== null && 'message' in err
+        ? String(err.message)
+        : 'Failed to fetch available rooms';
+      setError(err instanceof Error ? err : new Error(message));
     } finally {
       setLoading(false);
     }

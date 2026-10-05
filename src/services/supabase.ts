@@ -3,26 +3,136 @@ import type { Room, Booking, User, Guest, Invoice, Payment, Task, Review } from 
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const HAS_SUPABASE_CONFIG = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase configuration');
-}
+const createMockQueryBuilder = <T = any>(initialData: T[] = []) => {
+  let data = [...initialData];
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const result: any = {
+    data,
+    error: null,
+    count: data.length,
+  };
+
+  result.select = () => {
+    result.data = data;
+    result.count = data.length;
+    return result;
+  };
+
+  result.order = () => result;
+  result.eq = () => result;
+  result.neq = () => result;
+  result.lt = () => result;
+  result.gt = () => result;
+  result.limit = () => result;
+  result.maybeSingle = () => ({
+    data: data[0] ?? null,
+    error: null,
+    count: data.length,
+  });
+  result.single = () => ({
+    data: data[0] ?? null,
+    error: null,
+    count: data.length,
+  });
+  result.insert = (rows: T[] = []) => {
+    data = [...data, ...rows];
+    result.data = data;
+    result.count = data.length;
+    return result;
+  };
+  result.update = (updates: Partial<T>) => {
+    data = data.map((item: any) => ({ ...item, ...updates }));
+    result.data = data;
+    result.count = data.length;
+    return result;
+  };
+  result.delete = () => {
+    data = [];
+    result.data = data;
+    result.count = 0;
+    return result;
+  };
+
+  return result;
+};
+
+let mockDemoUser: any = null;
+const createDemoUser = (
+  email: string,
+  role: 'customer' | 'staff' | 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' = 'customer'
+) => ({
+  id: 'demo-user-id',
+  email,
+  app_metadata: { role },
+  user_metadata: { full_name: 'Demo Guest', role },
+  role,
+  full_name: 'Demo Guest',
+});
+
+const mockSupabase = {
+  auth: {
+    signUp: async (payload: {
+      email: string;
+      options?: { data?: { role?: 'customer' | 'staff' | 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance'; full_name?: string } };
+    }) => {
+      const role = payload.options?.data?.role ?? 'customer';
+      mockDemoUser = createDemoUser(payload.email, role);
+      const user = { ...mockDemoUser, user_metadata: { full_name: payload.options?.data?.full_name ?? 'Demo Guest', role } };
+      return {
+        data: { user, session: { user } },
+        error: null,
+      };
+    },
+    signInWithPassword: async (payload: { email: string }) => {
+      mockDemoUser = createDemoUser(payload.email, 'customer');
+      const user = { ...mockDemoUser, user_metadata: { full_name: 'Demo Guest', role: 'customer' } };
+      return {
+        data: { user, session: { user } },
+        error: null,
+      };
+    },
+    signOut: async () => ({ error: null }),
+    getSession: async () => ({ data: { session: mockDemoUser ? { user: mockDemoUser } : null }, error: null }),
+    onAuthStateChange: () => ({
+      data: {
+        subscription: {
+          unsubscribe: () => undefined,
+        },
+      },
+      error: null,
+    }),
+  },
+  from: () => createMockQueryBuilder(),
+  channel: () => ({
+    on: () => ({ on: () => ({ on: () => ({ on: () => ({ subscribe: () => ({}) }) }) }) }),
+    subscribe: () => ({})
+  }),
+  removeChannel: () => undefined,
+  rpc: async () => ({ data: [], error: null }),
+};
+
+export const supabase: any = HAS_SUPABASE_CONFIG ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : mockSupabase;
 
 // Type definitions for response
 export type Profile = User;
 
 // Auth Service
 export const authService = {
-  async signUp(email: string, password: string, fullName: string, role: 'customer' | 'staff' | 'admin' = 'customer') {
+  async signUp(
+    email: string,
+    password: string,
+    fullName: string,
+    role: 'customer' | 'staff' | 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' = 'customer'
+  ) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
-          role: role,
+          role,
         },
       },
     });
@@ -74,6 +184,15 @@ export const roomService = {
   },
 
   async getAvailableRooms(checkIn: string, checkOut: string): Promise<Room[]> {
+    const { data: conflictingReservations, error: reservationError } = await supabase
+      .from('reservations')
+      .select('room_id')
+      .neq('status', 'Cancelled')
+      .lt('check_in_date', checkOut)
+      .gt('check_out_date', checkIn);
+
+    if (reservationError) throw reservationError;
+
     const { data, error } = await supabase
       .from('rooms')
       .select('*')
@@ -81,7 +200,8 @@ export const roomService = {
       .order('room_type');
 
     if (error) throw error;
-    return data || [];
+    const reservedRoomIds = new Set((conflictingReservations ?? []).map((reservation) => reservation.room_id));
+    return (data ?? []).filter((room) => !reservedRoomIds.has(room.id));
   },
 
   async createRoom(room: Omit<Room, 'id' | 'created_at' | 'updated_at'>): Promise<Room> {
@@ -215,11 +335,37 @@ export const guestService = {
 
 // User Service
 export const userService = {
-  async getProfile(userId: string): Promise<User | null> {
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+  async getProfile(userId: string, fallbackProfile?: Partial<User>): Promise<User | null> {
+    if (!HAS_SUPABASE_CONFIG) {
+      return {
+        id: userId,
+        email: fallbackProfile?.email ?? mockDemoUser?.email ?? 'demo@hotel.com',
+        full_name: fallbackProfile?.full_name ?? mockDemoUser?.full_name ?? 'Demo Guest',
+        role: fallbackProfile?.role ?? mockDemoUser?.role ?? 'customer',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as User;
+    }
 
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+
+      if (error) throw error;
+      return data;
+    } catch (error: any) {
+      const message = error?.message ?? '';
+      if (message.includes('does not exist') || message.includes('relation "profiles"')) {
+        return {
+          id: userId,
+          email: fallbackProfile?.email ?? 'unknown@hotel.com',
+          full_name: fallbackProfile?.full_name ?? 'Hotel Guest',
+          role: fallbackProfile?.role ?? 'customer',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as User;
+      }
+      throw error;
+    }
   },
 
   async getUsers(): Promise<User[]> {

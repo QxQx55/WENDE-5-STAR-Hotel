@@ -8,7 +8,12 @@ type AuthContextType = {
   profile: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string, role?: 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer' | 'staff') => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    role?: 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer' | 'staff'
+  ) => Promise<boolean>;
   signOut: () => Promise<void>;
 };
 
@@ -23,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authService.getSession().then((session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        void fetchProfile(session.user);
       } else {
         setLoading(false);
       }
@@ -33,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (async () => {
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user);
         } else {
           setProfile(null);
           setLoading(false);
@@ -44,12 +49,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (authUser: AuthUser) => {
+    const userId = authUser.id;
+    const fallbackRole = (authUser.user_metadata?.role ?? authUser.app_metadata?.role ?? 'customer') as User['role'];
+
     try {
-      const data = await userService.getProfile(userId);
-      setProfile(data);
+      const data = await userService.getProfile(userId, {
+        id: userId,
+        email: authUser.email ?? '',
+        full_name: authUser.user_metadata?.full_name ?? 'Hotel Guest',
+        role: fallbackRole,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      setProfile(data ?? {
+        id: userId,
+        email: authUser.email ?? '',
+        full_name: authUser.user_metadata?.full_name ?? 'Hotel Guest',
+        role: fallbackRole,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setProfile({
+        id: userId,
+        email: authUser.email ?? '',
+        full_name: authUser.user_metadata?.full_name ?? 'Hotel Guest',
+        role: fallbackRole,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     } finally {
       setLoading(false);
     }
@@ -59,29 +89,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { user: authUser } = await authService.signIn(email, password);
     if (!authUser) throw new Error('Failed to sign in');
     setUser(authUser);
-    await fetchProfile(authUser.id);
+    await fetchProfile(authUser);
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer' | 'staff' = 'customer') => {
-    const { user: authUser } = await authService.signUp(email, password, fullName, role);
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer' | 'staff' = 'customer'
+  ) => {
+    const { user: authUser, session } = await authService.signUp(email, password, fullName, role);
     if (!authUser) throw new Error('Failed to create account');
 
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const existingProfile = await userService.getProfile(authUser.id);
-    if (!existingProfile) {
-      await userService.updateProfile(authUser.id, {
-        id: authUser.id,
-        email,
-        full_name: fullName,
-        role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as User);
-    }
-
     setUser(authUser);
-    await fetchProfile(authUser.id);
+    await fetchProfile(authUser);
+    return Boolean(session);
   };
 
   const signOut = async () => {

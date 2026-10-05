@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Hotel, Loader, ArrowRight } from 'lucide-react';
@@ -12,6 +12,7 @@ export function LoginPage() {
   const { signIn } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +20,9 @@ export function LoginPage() {
     setLoading(true);
     try {
       await signIn(email, password);
-      navigate('/');
+      const params = new URLSearchParams(location.search);
+      const next = params.get('next');
+      navigate(next?.startsWith('/') ? next : '/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in');
     } finally {

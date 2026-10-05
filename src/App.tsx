@@ -3,10 +3,26 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { MainLayout } from './layouts/MainLayout';
 import {
-  HomePage, RoomsPage, RoomDetailPage, LoginPage, SignupPage, BookingPage,
-  RoomsBookingPage, DiningPage, DiningDetailPage, ParkingPage, ParkingDetailPage,
-  BarsPage, GymPage, GymDetailPage, ServicesPage
+  HomePage,
+  RoomsPage,
+  RoomDetailPage,
+  LoginPage,
+  SignupPage,
+  BookingPage,
+  RoomsBookingPage,
+  DiningPage,
+  DiningDetailPage,
+  ParkingPage,
+  ParkingDetailPage,
+  BarsPage,
+  GymPage,
+  GymDetailPage,
+  ServicesPage,
 } from './pages';
+import ExperiencesPage from './pages/ExperiencesPage';
+import CustomerBookings from './components/CustomerBookings';
+import Dashboard from './components/Dashboard';
+import ReservationManagement from './components/ReservationManagement';
 import AdminDashboard from './components/AdminDashboard';
 import PmsDashboard from './components/PmsDashboard';
 import { Loader } from 'lucide-react';
@@ -25,6 +41,8 @@ function AppRoutes() {
     );
   }
 
+  const isStaffRole = profile?.role && ['admin', 'manager', 'front_desk', 'housekeeping', 'finance', 'staff'].includes(profile.role);
+
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
@@ -42,18 +60,19 @@ function AppRoutes() {
       <Route path="/gym/:id" element={<MainLayout><GymDetailPage /></MainLayout>} />
       <Route path="/services" element={<MainLayout><ServicesPage /></MainLayout>} />
       <Route path="/booking" element={<MainLayout><BookingPage /></MainLayout>} />
+      <Route path="/experiences" element={<MainLayout><ExperiencesPage /></MainLayout>} />
 
-      {/* PMS Dashboard */}
-      {user && profile?.role && ['admin', 'manager', 'front_desk', 'housekeeping', 'finance'].includes(profile.role) && (
+      {user && isStaffRole && (
         <>
           <Route path="/pms" element={<PmsDashboard />} />
           <Route path="/admin" element={<MainLayout><AdminDashboard /></MainLayout>} />
-          <Route path="/dashboard" element={<MainLayout><AdminDashboard /></MainLayout>} />
+          <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+          <Route path="/dashboard/bookings" element={<MainLayout><ReservationManagement /></MainLayout>} />
         </>
       )}
 
       {user && profile?.role === 'customer' && (
-        <Route path="/bookings" element={<MainLayout><BookingPage /></MainLayout>} />
+        <Route path="/bookings" element={<MainLayout><CustomerBookings /></MainLayout>} />
       )}
 
       <Route path="*" element={<Navigate to="/" />} />
