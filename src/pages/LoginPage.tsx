@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Hotel } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { Hotel, Loader, ArrowRight } from 'lucide-react';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -9,13 +10,13 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       await signIn(email, password);
       navigate('/');
@@ -27,71 +28,93 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
-      <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <div className="bg-slate-900 p-3 rounded-xl">
-            <Hotel className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <img
+          src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1920"
+          alt="Luxury Hotel"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-transparent" />
+        <div className="relative z-10 flex flex-col justify-center p-12 text-white">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl">
+              <Hotel className="w-8 h-8 text-white" />
+            </div>
+            <span className="text-2xl font-bold">ወንዴ Grand Hotel and Spa</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-4">{t('login_welcomeBack')}</h1>
+          <p className="text-lg text-white/80 max-w-md">
+            {t('login_desc')}
+          </p>
+          <div className="mt-12 flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-amber-400" />
+            <div className="h-2 w-8 rounded-full bg-white/30" />
+            <div className="h-2 w-2 rounded-full bg-white/30" />
           </div>
         </div>
+      </div>
 
-        <h1 className="text-2xl font-bold text-center text-slate-900 mb-2">Hotel Manager</h1>
-        <p className="text-center text-slate-600 mb-8">Sign in to your account</p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition"
-              placeholder="your@email.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm">
-              {error}
+      <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
+        <div className="w-full max-w-md">
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-700 p-3 rounded-xl">
+              <Hotel className="w-10 h-10 text-white" />
             </div>
-          )}
+          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-slate-900 text-white py-2 rounded-lg font-semibold hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">{t('login_signIn')}</h2>
+            <p className="text-slate-600">Access your hotel management dashboard</p>
+          </div>
 
-        <div className="mt-6 pt-6 border-t border-slate-200 text-center">
-          <p className="text-sm text-slate-600">
-            Don't have an account?{' '}
+          <form onSubmit={handleSubmit} className="space-y-5 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('login_email')}</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm"
+                placeholder="your@email.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('login_password')}</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition text-sm"
+                placeholder="Enter your password"
+              />
+            </div>
+            {error && <div className="bg-red-50 text-red-700 p-3 rounded-xl text-sm">{error}</div>}
             <button
-              onClick={() => navigate('/signup')}
-              className="text-slate-900 font-semibold hover:underline"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-3 rounded-xl font-semibold hover:from-slate-800 hover:to-slate-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20"
             >
-              Create one
+              {loading ? <Loader className="w-5 h-5 animate-spin" /> : <><span>{t('login_signIn')}</span><ArrowRight className="w-4 h-4" /></>}
             </button>
-          </p>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-600">
+              Don't have an account?{' '}
+              <button onClick={() => navigate('/signup')} className="text-slate-900 font-semibold hover:underline">
+                Create one
+              </button>
+            </p>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <p className="text-xs text-slate-500 text-center">
+              {t('login_demo')}
+            </p>
+          </div>
         </div>
       </div>
     </div>

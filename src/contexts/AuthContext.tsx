@@ -8,7 +8,7 @@ type AuthContextType = {
   profile: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string, role?: 'customer' | 'staff' | 'admin') => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, role?: 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer' | 'staff') => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchProfile(authUser.id);
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: 'customer' | 'staff' | 'admin' = 'customer') => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'admin' | 'manager' | 'front_desk' | 'housekeeping' | 'finance' | 'customer' | 'staff' = 'customer') => {
     const { user: authUser } = await authService.signUp(email, password, fullName, role);
     if (!authUser) throw new Error('Failed to create account');
 

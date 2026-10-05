@@ -1,4 +1,15 @@
 export { HomePage } from './HomePage';
 export { RoomsPage } from './RoomsPage';
+export { RoomDetailPage } from './RoomDetailPage';
 export { LoginPage } from './LoginPage';
 export { SignupPage } from './SignupPage';
+export { BookingPage } from './BookingPage';
+export { RoomsBookingPage } from './RoomsBookingPage';
+export { DiningPage } from './DiningPage';
+export { DiningDetailPage } from './DiningDetailPage';
+export { ParkingPage } from './ParkingPage';
+export { ParkingDetailPage } from './ParkingDetailPage';
+export { BarsPage } from './BarsPage';
+export { GymPage } from './GymPage';
+export { GymDetailPage } from './GymDetailPage';
+export { ServicesPage } from './ServicesPage';
